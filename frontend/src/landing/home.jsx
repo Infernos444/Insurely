@@ -150,309 +150,356 @@ const Home = () => {
 
   return (
     <div id='home' style={{ overflowX: "hidden" }}>
-<section
-  style={{
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "0 24px",
-    background: "linear-gradient(135deg, #0f172a 0%, #1F2937 100%)",
-    position: "relative",
-    overflow: "hidden"
-  }}
->
-  <motion.div
-    initial={{ opacity: 0, x: -100 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.8 }}
-    style={{
-      maxWidth: 1200,
-      width: "100%",
-      zIndex: 2,
-      padding: "0 24px"
-    }}
-  >
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.2 }}
-    >
-      <Text
+      <section
         style={{
-          color: "#00FFD1",
-          fontSize: "1rem",
-          fontWeight: 600,
-          letterSpacing: 2,
-          textTransform: "uppercase",
-          marginBottom: 16,
-          display: "block"
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 24px",
+          background: "linear-gradient(135deg, #0f172a 0%, #1F2937 100%)",
+          position: "relative",
+          overflow: "hidden"
         }}
       >
-        INSURANCE MADE INTELLIGENT
-      </Text>
-    </motion.div>
-
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "40px",
-        marginBottom: 24,
-        position: "relative",
-        flexWrap: "wrap"
-      }}
-    >
-      {/* Text section */}
-      <div style={{ flex: 1, minWidth: 300 }}>
-        <Title
-          level={1}
+        <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
           style={{
-            color: "#FFFFFF",
-            fontSize: "3.5rem",
-            fontWeight: 800,
-            lineHeight: 1.2
+            maxWidth: 1200,
+            width: "100%",
+            zIndex: 2,
+            padding: "0 24px"
           }}
         >
-          <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            style={{ display: "block" }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
           >
-            Predict.
-          </motion.span>
-          <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            style={{ display: "block" }}
-          >
-            Compare.
-          </motion.span>
-          <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            style={{ display: "block" }}
-          >
-            Choose Wisely.
-          </motion.span>
-        </Title>
-      </div>
+            <Text
+              style={{
+                color: "#00FFD1",
+                fontSize: "1rem",
+                fontWeight: 600,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                marginBottom: 16,
+                display: "block"
+              }}
+            >
+              INSURANCE MADE INTELLIGENT
+            </Text>
+          </motion.div>
 
-      {/* 3D Orbit Container */}
-      <motion.div
-        style={{
-          flex: 1,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          position: "relative",
-          height: "300px",
-          width: "300px",
-          perspective: "1000px"
-        }}
-        whileHover={{ scale: 1.05 }}
-      >
-        {/* GlitchText Centerpiece */}
-        <div style={{ 
-          position: "absolute", 
-          zIndex: 2,
-          transformStyle: "preserve-3d"
-        }}>
-          <GlitchText
-            speed={0.8}
-            enableShadows={true}
-            enableOnHover={false}
+          <div
             style={{
-              fontSize: "4rem",
-              fontWeight: 800,
-              lineHeight: 1,
-              color: "#FFFFFF",
-              transform: "translateZ(50px)"
+              display: "flex",
+              alignItems: "center",
+              gap: "40px",
+              marginBottom: 24,
+              position: "relative",
+              flexWrap: "wrap"
             }}
           >
-            INSURELY
-          </GlitchText>
-        </div>
+            {/* Text section */}
+            <div style={{ flex: 1, minWidth: 300 }}>
+              <Title
+                level={1}
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: "3.5rem",
+                  fontWeight: 800,
+                  lineHeight: 1.2
+                }}
+              >
+                <motion.span
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  style={{ display: "block" }}
+                >
+                  Predict.
+                </motion.span>
+                <motion.span
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  style={{ display: "block" }}
+                >
+                  Compare.
+                </motion.span>
+                <motion.span
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  style={{ display: "block" }}
+                >
+                  Choose Wisely.
+                </motion.span>
+              </Title>
+            </div>
 
-        {/* 3D Orbiting Elements */}
-        <motion.div
-          style={{
-            position: "absolute",
-            width: "240px",
-            height: "240px",
-            transformStyle: "preserve-3d"
-          }}
-          animate={{ 
-            rotateX: 360,
-            rotateY: 360,
-            rotateZ: 0
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        >
-          {orbitIcons.map((IconComponent, index) => {
-            const angle = (index / orbitIcons.length) * 2 * Math.PI;
-            const radius = 120;
-            const x = radius * Math.cos(angle);
-            const y = radius * Math.sin(angle);
-            
-            return (
+            {/* 3D Orbit Container */}
+            <motion.div
+              style={{
+                flex: 1,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                position: "relative",
+                height: "300px",
+                width: "300px",
+                perspective: "1000px"
+              }}
+              whileHover={{ scale: 1.05 }}
+            >
+              {/* Three 3D Rings surrounding the text */}
+              {[1, 2, 3].map((ring) => {
+                const size = 180 + ring * 40; // Different sizes for each ring
+                const thickness = 1 + ring * 0.5; // Different thickness for each ring
+                const color = ["rgba(0, 255, 209, 0.6)", "rgba(58, 123, 213, 0.4)", "rgba(114, 46, 209, 0.3)"][ring - 1]; // Different colors with transparency
+                
+                return (
+                  <motion.div
+                    key={ring}
+                    style={{
+                      position: "absolute",
+                      width: size,
+                      height: size,
+                      borderRadius: "50%",
+                      border: `${thickness}px solid ${color}`,
+                      zIndex: 1,
+                      transformStyle: "preserve-3d",
+                      transform: `rotateX(${60 + ring * 15}deg) rotateY(${45 + ring * 10}deg)`
+                    }}
+                    animate={{ 
+                      rotateX: 360,
+                      rotateY: 360,
+                      rotateZ: ring % 2 === 0 ? 360 : -360
+                    }}
+                    transition={{
+                      duration: 20 + ring * 5,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  >
+                    {/* Add some orbiting elements to each ring */}
+                    {[0, 1, 2, 3].map((i) => {
+                      const angle = (i / 4) * 2 * Math.PI;
+                      const x = (size / 2) * Math.cos(angle);
+                      const y = (size / 2) * Math.sin(angle);
+                      
+                      return (
+                        <motion.div
+                          key={i}
+                          style={{
+                            position: "absolute",
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            background: color,
+                            zIndex: 2,
+                            transform: `translate(${x}px, ${y}px)`
+                          }}
+                          animate={{
+                            scale: [1, 1.3, 1],
+                            opacity: [0.7, 1, 0.7]
+                          }}
+                          transition={{
+                            duration: 3 + i,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      );
+                    })}
+                  </motion.div>
+                );
+              })}
+
+              {/* GlitchText Centerpiece - now positioned within the rings */}
+              <div style={{ 
+                position: "relative", 
+                zIndex: 2,
+                transformStyle: "preserve-3d",
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+              }}>
+                <GlitchText
+                  speed={0.8}
+                  enableShadows={true}
+                  enableOnHover={false}
+                  style={{
+                    fontSize: "4rem",
+                    fontWeight: 800,
+                    lineHeight: 1,
+                    color: "#FFFFFF",
+                    transform: "translateZ(50px)"
+                  }}
+                >
+                  INSURELY
+                </GlitchText>
+              </div>
+
+              {/* Orbiting Icons */}
               <motion.div
-                key={index}
                 style={{
                   position: "absolute",
-                  fontSize: "24px",
-                  color: "#00FFD1",
-                  zIndex: 1,
-                  transform: `translate3d(${x}px, ${y}px, 0) rotateY(${angle * (180/Math.PI)}deg)`
+                  width: "240px",
+                  height: "240px",
+                  transformStyle: "preserve-3d"
                 }}
-                animate={{
+                animate={{ 
+                  rotateX: 360,
                   rotateY: 360,
-                  rotateX: 360
+                  rotateZ: 0
                 }}
                 transition={{
-                  duration: 15 + index * 2,
+                  duration: 20,
                   repeat: Infinity,
                   ease: "linear"
                 }}
               >
-                <IconComponent />
+                {orbitIcons.map((IconComponent, index) => {
+                  const angle = (index / orbitIcons.length) * 2 * Math.PI;
+                  const radius = 120;
+                  const x = radius * Math.cos(angle);
+                  const y = radius * Math.sin(angle);
+                  
+                  return (
+                    <motion.div
+                      key={index}
+                      style={{
+                        position: "absolute",
+                        fontSize: "24px",
+                        color: "#00FFD1",
+                        zIndex: 3,
+                        transform: `translate3d(${x}px, ${y}px, 0) rotateY(${angle * (180/Math.PI)}deg)`
+                      }}
+                      animate={{
+                        rotateY: 360,
+                        rotateX: 360
+                      }}
+                      transition={{
+                        duration: 15 + index * 2,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    >
+                      <IconComponent />
+                    </motion.div>
+                  );
+                })}
               </motion.div>
-            );
-          })}
+            </motion.div>
+          </div>
+
+          {/* Description */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+          >
+            <Paragraph
+              style={{
+                color: "#E0E0E0",
+                fontSize: "1.25rem",
+                marginBottom: 40,
+                maxWidth: 500
+              }}
+            >
+              Leveraging AI and community wisdom to demystify healthcare costs and insurance processes.
+              Get real-time insights, predictive analytics, and actionable recommendations.
+            </Paragraph>
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <Space size={24} style={{ marginTop: 16 }}>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                type="primary"
+                size="large"
+                style={{
+                  background: "linear-gradient(90deg, #00FFD1 0%, #3A7BD5 100%)",
+                  color: "#1F2937",
+                  fontWeight: 600,
+                  height: 50,
+                  padding: "0 32px",
+                  border: "none",
+                  borderRadius: 8
+                }}
+                icon={<ArrowRightOutlined />}
+              >
+                Analyze Your Bill
+              </Button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                size="large"
+                style={{
+                  background: "transparent",
+                  color: "#FFFFFF",
+                  borderColor: "rgba(255, 255, 255, 0.3)",
+                  fontWeight: 600,
+                  height: 50,
+                  padding: "0 32px",
+                  borderRadius: 8
+                }}
+              >
+                Explore Community Data
+              </Button>
+            </motion.div>
+          </Space>
         </motion.div>
 
-        {/* 3D Orbit Path */}
-        <motion.div
-          style={{
-            position: "absolute",
-            width: "240px",
-            height: "240px",
-            borderRadius: "50%",
-            border: "1px dashed rgba(0, 255, 209, 0.3)",
-            zIndex: 0,
-            transformStyle: "preserve-3d",
-            transform: "rotateX(60deg) rotateZ(45deg)"
-          }}
-          animate={{ 
-            rotateY: 360,
-            rotateZ: 360
-          }}
-          transition={{
-            duration: 60,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
-      </motion.div>
-    </div>
+        {/* Floating background elements */}
+        {[1, 2, 3, 4, 5].map((item) => (
+          <motion.div
+            key={item}
+            initial={{ opacity: 0, y: -100 }}
+            animate={{ 
+              opacity: [0.2, 0.5, 0.2],
+              y: [0, -20, 0],
+              x: Math.random() * 200 - 100
+            }}
+            transition={{ 
+              duration: 5 + Math.random() * 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 2
+            }}
+            style={{
+              position: "absolute",
+              fontSize: 24,
+              color: "rgba(0, 255, 209, 0.3)",
+              zIndex: 1,
+              top: `${Math.random() * 80 + 10}%`,
+              left: `${Math.random() * 80 + 10}%`
+            }}
+          >
+            {[<CheckCircleFilled />, <StarFilled />, <HeartFilled />, <ThunderboltFilled />][item % 4]}
+          </motion.div>
+        ))}
+      </section>
 
-    {/* Description */}
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.9 }}
-    >
-      <Paragraph
-        style={{
-          color: "#E0E0E0",
-          fontSize: "1.25rem",
-          marginBottom: 40,
-          maxWidth: 500
-        }}
-      >
-        Leveraging AI and community wisdom to demystify healthcare costs and insurance processes.
-        Get real-time insights, predictive analytics, and actionable recommendations.
-      </Paragraph>
-    </motion.div>
-
-    {/* CTA Buttons */}
-    <Space size={24} style={{ marginTop: 16 }}>
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Button
-          type="primary"
-          size="large"
-          style={{
-            background: "linear-gradient(90deg, #00FFD1 0%, #3A7BD5 100%)",
-            color: "#1F2937",
-            fontWeight: 600,
-            height: 50,
-            padding: "0 32px",
-            border: "none",
-            borderRadius: 8
-          }}
-          icon={<ArrowRightOutlined />}
-        >
-          Analyze Your Bill
-        </Button>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Button
-          size="large"
-          style={{
-            background: "transparent",
-            color: "#FFFFFF",
-            borderColor: "rgba(255, 255, 255, 0.3)",
-            fontWeight: 600,
-            height: 50,
-            padding: "0 32px",
-            borderRadius: 8
-          }}
-        >
-          Explore Community Data
-        </Button>
-      </motion.div>
-    </Space>
-  </motion.div>
-
-  {/* Floating background elements */}
-  {[1, 2, 3, 4, 5].map((item) => (
-    <motion.div
-      key={item}
-      initial={{ opacity: 0, y: -100 }}
-      animate={{ 
-        opacity: [0.2, 0.5, 0.2],
-        y: [0, -20, 0],
-        x: Math.random() * 200 - 100
-      }}
-      transition={{ 
-        duration: 5 + Math.random() * 5,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: Math.random() * 2
-      }}
-      style={{
-        position: "absolute",
-        fontSize: 24,
-        color: "rgba(0, 255, 209, 0.3)",
-        zIndex: 1,
-        top: `${Math.random() * 80 + 10}%`,
-        left: `${Math.random() * 80 + 10}%`
-      }}
-    >
-      {[<CheckCircleFilled />, <StarFilled />, <HeartFilled />, <ThunderboltFilled />][item % 4]}
-    </motion.div>
-  ))}
-</section>
       {/* Stats Section */}
       <section style={{ 
         padding: "80px 24px",

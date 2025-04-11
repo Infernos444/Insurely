@@ -60,7 +60,7 @@ const Signup = () => {
     try {
       await signInWithPopup(auth, googleProvider);
       message.success("Google signup successful!");
-      navigate("/dashboard");
+      navigate("/patientdashboard");
     } catch (error) {
       message.error(error.message || "Google signup failed");
     } finally {

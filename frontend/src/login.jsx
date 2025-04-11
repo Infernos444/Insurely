@@ -35,7 +35,7 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       message.success("Login successful!");
-      navigate("/dashboard");
+      navigate("/patientdashboard");
     } catch (error) {
       message.error(error.message || "Login failed");
     } finally {
@@ -48,7 +48,7 @@ const Login = () => {
     try {
       await signInWithPopup(auth, googleProvider);
       message.success("Google login successful!");
-      navigate("/dashboard");
+      navigate("/patientdashboard");
     } catch (error) {
       message.error(error.message || "Google login failed");
     } finally {

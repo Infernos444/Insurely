@@ -21,7 +21,13 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  listAll
+} from "firebase/storage"; // ✅ ADDED listAll
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -55,7 +61,8 @@ const UploadPrescriptions = () => {
     setUploading(true);
     try {
       const storage = getStorage();
-      const storageRef = ref(storage, `prescriptions/${Date.now()}-${file.name}`);
+      const filename = `${Date.now()}-${file.name}`;
+      const storageRef = ref(storage, `prescriptions/${filename}`);
       await uploadBytes(storageRef, file);
       const fileURL = await getDownloadURL(storageRef);
 
@@ -76,10 +83,30 @@ const UploadPrescriptions = () => {
     }
   };
 
+  // ✅ FIXED fetchPrescriptions to list files from Firebase Storage
   const fetchPrescriptions = async () => {
     setLoading(true);
     try {
-      setPrescriptions([]); // mock fetch
+      const storage = getStorage();
+      const listRef = ref(storage, 'prescriptions/');
+      const result = await listAll(listRef);
+
+      const items = await Promise.all(
+        result.items.map(async (itemRef) => {
+          const url = await getDownloadURL(itemRef);
+          const timestamp = parseInt(itemRef.name.split("-")[0]); // extract from filename
+          return {
+            id: itemRef.name,
+            file_name: itemRef.name.split("-").slice(1).join("-"),
+            file_url: url,
+            uploaded_at: new Date(timestamp).toISOString()
+          };
+        })
+      );
+
+      // Sort by newest
+      const sorted = items.sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
+      setPrescriptions(sorted);
     } catch (error) {
       console.error("Fetch error:", error);
       message.error('Failed to fetch prescriptions');

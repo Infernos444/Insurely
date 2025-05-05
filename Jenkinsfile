@@ -36,23 +36,12 @@ pipeline {
             }
         }
 
-        stage('Setup Tesseract Environment') {
-            steps {
-                dir('tesseract') {
-                    sh '''
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install --upgrade pip
-                        pip install -r requirements.txt || echo "No requirements.txt found"
-                    '''
-                }
-            }
-        }
-
         stage('Run Tesseract Scripts') {
             steps {
                 dir('tesseract') {
-                    sh 'venv/bin/python ocr_firebase.py || echo "Error running OCR script"'
+                    sh '''
+                        python3 ocr_script.py || echo "Replace with your actual OCR entry script"
+                    '''
                 }
             }
         }
@@ -60,6 +49,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Run your tests here'
+                // Example: sh 'pytest' or similar
             }
         }
 
@@ -69,6 +59,7 @@ pipeline {
             }
             steps {
                 echo 'Deploying application...'
+                // You can add actual deployment commands here.
             }
         }
     }

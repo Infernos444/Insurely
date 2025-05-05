@@ -15,8 +15,12 @@ pipeline {
         stage('Setup Backend') {
             steps {
                 dir('backend') {
-                    sh 'npm install'
-                    sh 'npm run build || echo "No build script defined for backend"'
+                    sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt || echo "No requirements.txt found"
+                    '''
                 }
             }
         }
@@ -24,8 +28,23 @@ pipeline {
         stage('Setup Frontend') {
             steps {
                 dir('frontend') {
-                    sh 'npm install'
-                    sh 'npm run build'
+                    sh '''
+                        npm install
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Setup Tesseract Environment') {
+            steps {
+                dir('tesseract') {
+                    sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt || echo "No requirements.txt found"
+                    '''
                 }
             }
         }
@@ -33,7 +52,7 @@ pipeline {
         stage('Run Tesseract Scripts') {
             steps {
                 dir('tesseract') {
-                    sh 'python3 ocr_script.py || echo "Replace with your actual OCR entry script"'
+                    sh 'venv/bin/python ocr_firebase.py || echo "Error running OCR script"'
                 }
             }
         }
@@ -41,7 +60,6 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Run your tests here'
-                // Example: sh 'npm test'
             }
         }
 

@@ -19,7 +19,7 @@ pipeline {
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install --upgrade pip
-                        pip install -r requirements.txt || echo "No requirements.txt found"
+                        pip install -r requirements.txt
                     '''
                 }
             }
@@ -28,10 +28,8 @@ pipeline {
         stage('Setup Frontend') {
             steps {
                 dir('frontend') {
-                    sh '''
-                        npm install
-                        npm run build
-                    '''
+                    sh 'npm install'
+                    sh 'npm run build'
                 }
             }
         }
@@ -40,6 +38,9 @@ pipeline {
             steps {
                 dir('tesseract') {
                     sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install -r requirements.txt
                         python3 ocr_script.py || echo "Replace with your actual OCR entry script"
                     '''
                 }
@@ -49,7 +50,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Run your tests here'
-                // Example: sh 'pytest' or similar
+                // Add actual test command like: sh 'pytest tests/'
             }
         }
 
@@ -59,7 +60,7 @@ pipeline {
             }
             steps {
                 echo 'Deploying application...'
-                // You can add actual deployment commands here.
+                // Add deployment logic (e.g., Docker, systemctl, etc.)
             }
         }
     }

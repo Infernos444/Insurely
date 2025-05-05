@@ -9,14 +9,18 @@ import docx
 import tempfile
 import firebase_admin
 from firebase_admin import credentials, storage, firestore
+from google.cloud.storage import Blob
+import magic  # ✅ NEW - For detecting file type
+import time
+import sys
 
 # ✅ Path to Poppler for macOS
 POPPLER_PATH = "/opt/homebrew/bin"
 
 # ✅ Firebase Initialization
-cred = credentials.Certificate("firebase_config/insurely-24724-firebase-adminsdk-fbsvc-7a30017133.json")
+cred = credentials.Certificate("firebase_config/insurely-24724-firebase-adminsdk-fbsvc-1f5327dfb9.json")
 firebase_admin.initialize_app(cred, {
-    'storageBucket': 'insurely-24724.firebasestorage.app'
+    'storageBucket': 'insurely-24724.firebasestorage.app'  # ✅ Matches exactly with your Firebase bucket
 })
 
 bucket = storage.bucket()
@@ -29,15 +33,17 @@ def preprocess_image(image_path):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     scaled = cv2.resize(thresh, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
-    temp = "preprocessed_temp.png"
-    cv2.imwrite(temp, scaled)
-    return temp
+    temp_path = "preprocessed_temp.png"
+    cv2.imwrite(temp_path, scaled)
+    return temp_path
 
 def extract_text_from_file(path):
     print(f"🛠 Using Poppler path: {POPPLER_PATH}")
+
     if path.lower().endswith('.docx'):
         doc = docx.Document(path)
         return "\n".join([p.text for p in doc.paragraphs])
+
     elif path.lower().endswith('.pdf'):
         try:
             images = convert_from_path(path, poppler_path=POPPLER_PATH)
@@ -51,8 +57,10 @@ def extract_text_from_file(path):
     preprocessed = preprocess_image(path)
     text = pytesseract.image_to_string(Image.open(preprocessed), config='--oem 3')
 
-    if os.path.exists(preprocessed): os.remove(preprocessed)
-    if path == "temp_image.png" and os.path.exists(path): os.remove(path)
+    if os.path.exists(preprocessed):
+        os.remove(preprocessed)
+    if path == "temp_image.png" and os.path.exists(path):
+        os.remove(path)
 
     return text
 
@@ -91,35 +99,120 @@ def extract_fields(text):
 
     return extracted
 
+def get_file_mimetype(file_path):
+    mime = magic.Magic(mime=True)
+    return mime.from_file(file_path)
+
 def download_blob(blob):
-    _, temp_path = tempfile.mkstemp(suffix=os.path.splitext(blob.name)[-1])
+    filename = os.path.basename(blob.name)
+    
+    if not os.path.splitext(filename)[1]:
+        _, temp_path = tempfile.mkstemp()
+    else:
+        _, temp_path = tempfile.mkstemp(suffix=os.path.splitext(filename)[-1])
+
     blob.download_to_filename(temp_path)
-    print(f"📥 Downloaded: {blob.name}")
+    print(f"📥 Downloaded: {blob.name} to {temp_path}")
     return temp_path
+
+def process_single_file(file_path):
+    try:
+        blob = bucket.blob(file_path)
+        if not blob.exists():
+            print(f"❌ File {file_path} does not exist in storage")
+            return None
+
+        local_path = download_blob(blob)
+
+        file_type = get_file_mimetype(local_path)
+        print(f"📦 Detected file type: {file_type}")
+
+        if file_type.startswith("image"):
+            text = extract_text_from_file(local_path)
+
+        elif file_type == "application/pdf":
+            new_path = local_path + ".pdf"
+            os.rename(local_path, new_path)
+            local_path = new_path
+            text = extract_text_from_file(local_path)
+
+        elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            new_path = local_path + ".docx"
+            os.rename(local_path, new_path)
+            local_path = new_path
+            text = extract_text_from_file(local_path)
+
+        else:
+            print("❌ Unsupported file type, skipping...")
+            os.remove(local_path)
+            return None
+
+        fields = extract_fields(text)
+
+        print(f"\n📝 File: {file_path}")
+        print(f"📄 First 300 chars:\n{text[:300]}...\n")
+        print(f"✅ Extracted Fields:\n{fields}\n{'-'*60}")
+
+        parts = file_path.split("/")
+        if len(parts) >= 3:
+            uid = parts[1]
+            filename = parts[2].split('.')[0]
+            db.collection("users").document(uid).collection("estimates").document(filename).set(fields)
+            print(f"🔥 Saved to Firestore: users/{uid}/estimates/{filename}")
+        else:
+            doc_id = file_path.split("/")[-1].split(".")[0]
+            db.collection("estimates").document(doc_id).set(fields)
+            print(f"🔥 Saved to Firestore: estimates/{doc_id}")
+
+        os.remove(local_path)
+        return fields
+
+    except Exception as e:
+        print(f"❌ Error processing {file_path}: {str(e)}")
+        return None
 
 def process_all_estimate_files():
     print("🔍 Listing files in 'estimates/'...")
     blobs = bucket.list_blobs(prefix="estimates/")
     for blob in blobs:
         if blob.name.endswith("/"):
-            continue  # skip folders
+            continue
+        process_single_file(blob.name)
+
+def listen_for_new_files():
+    print("👂 Listening for new files in 'estimates/'...")
+    known_files = set(blob.name for blob in bucket.list_blobs(prefix="estimates/") if not blob.name.endswith("/"))
+
+    while True:
         try:
-            local_path = download_blob(blob)
-            text = extract_text_from_file(local_path)
-            fields = extract_fields(text)
+            current_files = set(blob.name for blob in bucket.list_blobs(prefix="estimates/") if not blob.name.endswith("/"))
+            new_files = current_files - known_files
 
-            print(f"\n📝 File: {blob.name}")
-            print(f"📄 First 300 chars:\n{text[:300]}...\n")
-            print(f"✅ Extracted Fields:\n{fields}\n{'-'*60}")
+            for file_path in new_files:
+                print(f"🆕 New file detected: {file_path}")
+                process_single_file(file_path)
 
-            # ✅ Save to Firestore
-            doc_id = blob.name.split("/")[-1].split(".")[0]
-            db.collection("estimates").document(doc_id).set(fields)
-            print(f"🔥 Saved to Firestore: {doc_id}")
+            known_files = current_files
+            time.sleep(10)
 
-            os.remove(local_path)
+        except KeyboardInterrupt:
+            print("🛑 Stopping listener...")
+            break
         except Exception as e:
-            print(f"❌ Error processing {blob.name}: {str(e)}")
+            print(f"⚠️ Error in listener: {str(e)}")
+            time.sleep(30)
 
 if __name__ == "__main__":
-    process_all_estimate_files()
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+        print(f"🔍 Processing specific file: {file_path}")
+        result = process_single_file(file_path)
+        if result:
+            print("🎉 Successfully processed file")
+        else:
+            print("❌ Failed to process file")
+    else:
+        print("🔍 Processing all estimate files...")
+        process_all_estimate_files()
+        # Uncomment this if you want real-time listener
+        # listen_for_new_files()

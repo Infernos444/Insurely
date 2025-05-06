@@ -8,7 +8,12 @@ pipeline {
         VENV_DIR = "${env.BACKEND_DIR}/venv"
     }
 
+    parameters {
+        booleanParam(name: 'RUN_OCR', defaultValue: false, description: 'Run OCR Script (tesseract)?')
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
                 echo 'Checking out source code...'
@@ -57,6 +62,9 @@ pipeline {
         }
 
         stage('Run Tesseract OCR Script') {
+            when {
+                expression { return params.RUN_OCR }
+            }
             steps {
                 dir(TESSERACT_DIR) {
                     echo 'Running Tesseract OCR Firebase script...'

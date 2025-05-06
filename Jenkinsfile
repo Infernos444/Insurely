@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        BACKEND_DIR = "backend"
-        FRONTEND_DIR = "frontend"
+        FRONTEND_DIR = 'frontend'
+        BACKEND_DIR = 'backend'
+        VENV_DIR = "${env.BACKEND_DIR}/venv"
     }
 
     stages {
@@ -16,7 +17,7 @@ pipeline {
 
         stage('Setup Frontend') {
             steps {
-                dir("${FRONTEND_DIR}") {
+                dir(FRONTEND_DIR) {
                     echo 'Installing frontend dependencies...'
                     sh 'npm install'
 
@@ -28,7 +29,7 @@ pipeline {
 
         stage('Setup Backend') {
             steps {
-                dir("${BACKEND_DIR}") {
+                dir(BACKEND_DIR) {
                     echo 'Removing old venv if exists...'
                     sh 'rm -rf venv'
 
@@ -47,23 +48,14 @@ pipeline {
 
         stage('Run Tesseract OCR Script') {
             steps {
-                dir("${BACKEND_DIR}") {
-                    echo 'Running OCR script...'
+                dir(BACKEND_DIR) {
+                    echo 'Running Tesseract OCR script...'
                     sh '''
                         . venv/bin/activate
-                        python ocr.py
+                        python ocr_script.py
                     '''
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline completed successfully.'
-        }
-        failure {
-            echo 'Pipeline failed. Check logs for details.'
         }
     }
 }

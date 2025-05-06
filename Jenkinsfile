@@ -59,8 +59,8 @@ pipeline {
 
         stage('Wait before running OCR') {
             steps {
-                echo 'Waiting for 2 minutes before running OCR...'
-                sleep time: 2, unit: 'MINUTES'
+                echo 'Waiting for 50 seconds before running OCR...'
+                sleep time: 50, unit: 'SECONDS'
             }
         }
 

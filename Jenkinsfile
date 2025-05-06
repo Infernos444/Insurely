@@ -2,10 +2,8 @@ pipeline {
     agent any
 
     environment {
-        BACKEND_DIR = 'backend'
-        FRONTEND_DIR = 'frontend'
-        TESSERACT_DIR = 'tesseract'
-        PYTHON = 'python3' // adjust to python3.10 or python3.12 if needed
+        BACKEND_DIR = "backend"
+        FRONTEND_DIR = "frontend"
     }
 
     stages {
@@ -19,13 +17,11 @@ pipeline {
         stage('Setup Frontend') {
             steps {
                 dir("${FRONTEND_DIR}") {
-                    sh '''
-                        echo "Installing frontend dependencies..."
-                        npm install
+                    echo 'Installing frontend dependencies...'
+                    sh 'npm install'
 
-                        echo "Starting frontend..."
-                        nohup npm start > frontend.log 2>&1 &
-                    '''
+                    echo 'Starting frontend...'
+                    sh 'nohup npm start &'
                 }
             }
         }
@@ -33,17 +29,17 @@ pipeline {
         stage('Setup Backend') {
             steps {
                 dir("${BACKEND_DIR}") {
-                    sh '''
-                        echo "Creating virtual environment..."
-                        ${PYTHON} -m venv venv
+                    echo 'Removing old venv if exists...'
+                    sh 'rm -rf venv'
 
-                        echo "Activating backend venv and installing requirements..."
-                        source venv/bin/activate
+                    echo 'Creating new virtual environment...'
+                    sh 'python3 -m venv venv'
+
+                    echo 'Activating backend venv and installing requirements...'
+                    sh '''
+                        . venv/bin/activate
                         pip install --upgrade pip
                         pip install -r requirements.txt
-
-                        echo "Starting backend server..."
-                        nohup venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
                     '''
                 }
             }
@@ -51,13 +47,11 @@ pipeline {
 
         stage('Run Tesseract OCR Script') {
             steps {
-                dir("${TESSERACT_DIR}") {
+                dir("${BACKEND_DIR}") {
+                    echo 'Running OCR script...'
                     sh '''
-                        echo "Activating backend environment for OCR..."
-                        source ../${BACKEND_DIR}/venv/bin/activate
-
-                        echo "Running OCR script..."
-                        python3 ocr_firebase.py
+                        . venv/bin/activate
+                        python ocr.py
                     '''
                 }
             }
@@ -65,8 +59,8 @@ pipeline {
     }
 
     post {
-        always {
-            echo 'Pipeline completed.'
+        success {
+            echo 'Pipeline completed successfully.'
         }
         failure {
             echo 'Pipeline failed. Check logs for details.'

@@ -2,75 +2,74 @@ pipeline {
     agent any
 
     environment {
-        NODE_ENV = 'development'
+        BACKEND_DIR = 'backend'
+        FRONTEND_DIR = 'frontend'
+        TESSERACT_DIR = 'tesseract'
+        PYTHON = 'python3' // adjust to python3.10 or python3.12 if needed
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Thirumalaivasangj3/Insurely.git'
-            }
-        }
-
-        stage('Setup Backend') {
-            steps {
-                dir('backend') {
-                    sh '''
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install --upgrade pip
-                        pip install -r requirements.txt
-                    '''
-                }
+                echo 'Checking out source code...'
+                checkout scm
             }
         }
 
         stage('Setup Frontend') {
             steps {
-                dir('frontend') {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
-            }
-        }
-
-        stage('Run Tesseract Scripts') {
-            steps {
-                dir('tesseract') {
+                dir("${FRONTEND_DIR}") {
                     sh '''
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install -r requirements.txt
-                        python3 ocr_script.py || echo "Replace with your actual OCR entry script"
+                        echo "Installing frontend dependencies..."
+                        npm install
+
+                        echo "Starting frontend..."
+                        nohup npm start > frontend.log 2>&1 &
                     '''
                 }
             }
         }
 
-        stage('Test') {
+        stage('Setup Backend') {
             steps {
-                echo 'Run your tests here'
-                // Add actual test command like: sh 'pytest tests/'
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                        echo "Creating virtual environment..."
+                        ${PYTHON} -m venv venv
+
+                        echo "Activating backend venv and installing requirements..."
+                        source venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+
+                        echo "Starting backend server..."
+                        nohup venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
+                    '''
+                }
             }
         }
 
-        stage('Deploy') {
-            when {
-                branch 'main'
-            }
+        stage('Run Tesseract OCR Script') {
             steps {
-                echo 'Deploying application...'
-                // Add deployment logic (e.g., Docker, systemctl, etc.)
+                dir("${TESSERACT_DIR}") {
+                    sh '''
+                        echo "Activating backend environment for OCR..."
+                        source ../${BACKEND_DIR}/venv/bin/activate
+
+                        echo "Running OCR script..."
+                        python3 ocr_firebase.py
+                    '''
+                }
             }
         }
     }
 
     post {
-        success {
-            echo 'Pipeline completed successfully!'
+        always {
+            echo 'Pipeline completed.'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo 'Pipeline failed. Check logs for details.'
         }
     }
 }

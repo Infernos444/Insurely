@@ -4,6 +4,7 @@ pipeline {
     environment {
         FRONTEND_DIR = 'frontend'
         BACKEND_DIR = 'backend'
+        TESSERACT_DIR = 'tesseract'
         VENV_DIR = "${env.BACKEND_DIR}/venv"
     }
 
@@ -46,13 +47,21 @@ pipeline {
             }
         }
 
+        stage('Install Tesseract Requirements') {
+            steps {
+                dir(TESSERACT_DIR) {
+                    echo 'Installing tesseract dependencies...'
+                    sh 'pip3 install -r requirements.txt'
+                }
+            }
+        }
+
         stage('Run Tesseract OCR Script') {
             steps {
-                dir(BACKEND_DIR) {
-                    echo 'Running Tesseract OCR script...'
+                dir(TESSERACT_DIR) {
+                    echo 'Running Tesseract OCR Firebase script...'
                     sh '''
-                        . venv/bin/activate
-                        python ocr_script.py
+                        python3 ocr_firebase.py
                     '''
                 }
             }

@@ -8,10 +8,6 @@ pipeline {
         VENV_DIR = "${env.BACKEND_DIR}/venv"
     }
 
-    parameters {
-        booleanParam(name: 'RUN_OCR', defaultValue: false, description: 'Run OCR Script (tesseract)?')
-    }
-
     stages {
 
         stage('Checkout') {
@@ -61,10 +57,14 @@ pipeline {
             }
         }
 
-        stage('Run Tesseract OCR Script') {
-            when {
-                expression { return params.RUN_OCR }
+        stage('Wait before running OCR') {
+            steps {
+                echo 'Waiting for 2 minutes before running OCR...'
+                sleep time: 2, unit: 'MINUTES'
             }
+        }
+
+        stage('Run Tesseract OCR Script') {
             steps {
                 dir(TESSERACT_DIR) {
                     echo 'Running Tesseract OCR Firebase script...'

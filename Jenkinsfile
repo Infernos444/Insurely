@@ -69,7 +69,7 @@ pipeline {
                 dir(TESSERACT_DIR) {
                     echo 'Running Tesseract OCR Firebase script...'
                     sh '''
-                        python3 ocr_firebase.py
+                        venv/bin/python ocr_firebase.py
                     '''
                 }
             }

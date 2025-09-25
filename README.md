@@ -96,12 +96,6 @@ A smarter, crowdsourced insurance & billing intelligence platform that:
 
 ---
 
-## 🚀 Get Involved
-
-Want to contribute? Open issues, suggest features, or submit PRs — every step helps improve India’s healthcare transparency.
-
----
-
 ## 📄 License
 
 This project is under the MIT License. See the [LICENSE](LICENSE) file for more details.

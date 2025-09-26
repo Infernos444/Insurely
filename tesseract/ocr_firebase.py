@@ -10,21 +10,56 @@ import tempfile
 import firebase_admin
 from firebase_admin import credentials, storage, firestore
 from google.cloud.storage import Blob
-import magic  # ✅ NEW - For detecting file type
+import magic
 import time
 import sys
+import json
+from datetime import datetime
 
 # ✅ Path to Poppler for macOS
 POPPLER_PATH = "/opt/homebrew/bin"
 
 # ✅ Firebase Initialization
-cred = credentials.Certificate("firebase_config/insurely-24724-firebase-adminsdk-fbsvc-1f5327dfb9.json")
+cred = credentials.Certificate("firebase_config/insurely-24724-firebase-adminsdk-fbsvc-194ed311fb.json")
+
 firebase_admin.initialize_app(cred, {
-    'storageBucket': 'insurely-24724.firebasestorage.app'  # ✅ Matches exactly with your Firebase bucket
+    'storageBucket': 'insurely-24724.firebasestorage.app'
 })
 
 bucket = storage.bucket()
 db = firestore.client()
+print(f"✅ Connected to bucket: {bucket.name}")
+
+# ✅ Track processed files
+PROCESSED_FILES_FILE = "processed_files.json"
+
+def load_processed_files():
+    """Load the list of already processed files"""
+    try:
+        if os.path.exists(PROCESSED_FILES_FILE):
+            with open(PROCESSED_FILES_FILE, 'r') as f:
+                return set(json.load(f))
+        return set()
+    except Exception as e:
+        print(f"⚠️ Error loading processed files: {e}")
+        return set()
+
+def save_processed_files(processed_files):
+    """Save the list of processed files"""
+    try:
+        with open(PROCESSED_FILES_FILE, 'w') as f:
+            json.dump(list(processed_files), f)
+    except Exception as e:
+        print(f"⚠️ Error saving processed files: {e}")
+
+def is_file_processed(file_path, processed_files):
+    """Check if file has already been processed"""
+    return file_path in processed_files
+
+def mark_file_processed(file_path, processed_files):
+    """Mark file as processed"""
+    processed_files.add(file_path)
+    save_processed_files(processed_files)
 
 def preprocess_image(image_path):
     image = cv2.imread(image_path)
@@ -97,6 +132,9 @@ def extract_fields(text):
     else:
         extracted['in_network'] = None
 
+    # ✅ Add timestamp
+    extracted["processed_at"] = datetime.now().isoformat()
+    
     return extracted
 
 def get_file_mimetype(file_path):
@@ -115,8 +153,14 @@ def download_blob(blob):
     print(f"📥 Downloaded: {blob.name} to {temp_path}")
     return temp_path
 
-def process_single_file(file_path):
+def process_single_file(file_path, processed_files):
+    """Process a single file if it hasn't been processed before"""
     try:
+        # ✅ Check if file already processed
+        if is_file_processed(file_path, processed_files):
+            print(f"⏭️ Skipping already processed file: {file_path}")
+            return None
+
         blob = bucket.blob(file_path)
         if not blob.exists():
             print(f"❌ File {file_path} does not exist in storage")
@@ -153,17 +197,33 @@ def process_single_file(file_path):
         print(f"📄 First 300 chars:\n{text[:300]}...\n")
         print(f"✅ Extracted Fields:\n{fields}\n{'-'*60}")
 
-        parts = file_path.split("/")
-        if len(parts) >= 3:
-            uid = parts[1]
-            filename = parts[2].split('.')[0]
-            db.collection("users").document(uid).collection("estimates").document(filename).set(fields)
-            print(f"🔥 Saved to Firestore: users/{uid}/estimates/{filename}")
+        # Extract UID from folder structure
+        path_parts = file_path.split('/')
+        
+        if len(path_parts) >= 3:
+            uid = path_parts[1]
+            filename = path_parts[2].split('.')[0]
+            
+            # ✅ Check if document already exists in Firestore
+            doc_ref = db.collection("users").document(uid).collection("estimates").document(filename)
+            existing_doc = doc_ref.get()
+            
+            if existing_doc.exists:
+                print(f"⏭️ Document already exists in Firestore: users/{uid}/estimates/{filename}")
+                # Optionally update instead of skipping:
+                # doc_ref.set(fields, merge=True)
+                # print(f"🔥 Updated Firestore: users/{uid}/estimates/{filename}")
+            else:
+                doc_ref.set(fields)
+                print(f"🔥 Saved to Firestore: users/{uid}/estimates/{filename}")
+                
         else:
-            doc_id = file_path.split("/")[-1].split(".")[0]
+            doc_id = file_path.replace('/', '_').replace('&', '')
             db.collection("estimates").document(doc_id).set(fields)
             print(f"🔥 Saved to Firestore: estimates/{doc_id}")
 
+        # ✅ Mark file as processed
+        mark_file_processed(file_path, processed_files)
         os.remove(local_path)
         return fields
 
@@ -171,48 +231,89 @@ def process_single_file(file_path):
         print(f"❌ Error processing {file_path}: {str(e)}")
         return None
 
-def process_all_estimate_files():
-    print("🔍 Listing files in 'estimates/'...")
+def process_new_estimate_files():
+    """Process only NEW files that haven't been processed before"""
+    print("🔍 Checking for NEW files in 'estimates/' folder...")
+    processed_files = load_processed_files()
+    print(f"📊 Already processed: {len(processed_files)} files")
+    
+    blobs = bucket.list_blobs(prefix="estimates/")
+    new_files_count = 0
+    total_files = 0
+    
+    for blob in blobs:
+        if blob.name.endswith("/"):  # Skip folder entries
+            continue
+            
+        total_files += 1
+        
+        if not is_file_processed(blob.name, processed_files):
+            print(f"🆕 NEW FILE FOUND: {blob.name}")
+            process_single_file(blob.name, processed_files)
+            new_files_count += 1
+        else:
+            print(f"⏭️ Already processed: {blob.name}")
+    
+    print(f"✅ Total files in storage: {total_files}")
+    print(f"✅ New files processed: {new_files_count}")
+    print(f"✅ Already processed: {total_files - new_files_count}")
+
+def listen_for_new_files_realtime():
+    """Real-time listener that only processes new files"""
+    print("👂 Listening for NEW files in real-time...")
+    processed_files = load_processed_files()
+    
+    # First, mark all existing files as processed
     blobs = bucket.list_blobs(prefix="estimates/")
     for blob in blobs:
-        if blob.name.endswith("/"):
-            continue
-        process_single_file(blob.name)
-
-def listen_for_new_files():
-    print("👂 Listening for new files in 'estimates/'...")
-    known_files = set(blob.name for blob in bucket.list_blobs(prefix="estimates/") if not blob.name.endswith("/"))
-
+        if not blob.name.endswith("/"):
+            if not is_file_processed(blob.name, processed_files):
+                mark_file_processed(blob.name, processed_files)
+    
+    save_processed_files(processed_files)
+    print(f"📊 Marked existing {len(processed_files)} files as processed")
+    
     while True:
         try:
             current_files = set(blob.name for blob in bucket.list_blobs(prefix="estimates/") if not blob.name.endswith("/"))
-            new_files = current_files - known_files
+            new_files = current_files - processed_files
 
             for file_path in new_files:
-                print(f"🆕 New file detected: {file_path}")
-                process_single_file(file_path)
+                print(f"🆕 NEW FILE UPLOADED: {file_path}")
+                process_single_file(file_path, processed_files)
 
-            known_files = current_files
-            time.sleep(10)
+            time.sleep(10)  # Check every 10 seconds
 
         except KeyboardInterrupt:
-            print("🛑 Stopping listener...")
+            print("🛑 Stopping real-time listener...")
             break
         except Exception as e:
             print(f"⚠️ Error in listener: {str(e)}")
             time.sleep(30)
 
+def reset_processed_files():
+    """Reset the processed files list (use carefully!)"""
+    if os.path.exists(PROCESSED_FILES_FILE):
+        os.remove(PROCESSED_FILES_FILE)
+        print("✅ Processed files list reset")
+    else:
+        print("ℹ️ No processed files list found")
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-        print(f"🔍 Processing specific file: {file_path}")
-        result = process_single_file(file_path)
-        if result:
-            print("🎉 Successfully processed file")
+        if sys.argv[1] == "--reset":
+            reset_processed_files()
+        elif sys.argv[1] == "--realtime":
+            listen_for_new_files_realtime()
         else:
-            print("❌ Failed to process file")
+            file_path = sys.argv[1]
+            print(f"🔍 Processing specific file: {file_path}")
+            processed_files = load_processed_files()
+            result = process_single_file(file_path, processed_files)
+            if result:
+                print("🎉 Successfully processed file")
+            else:
+                print("❌ Failed to process file")
     else:
-        print("🔍 Processing all estimate files...")
-        process_all_estimate_files()
-        # Uncomment this if you want real-time listener
-        # listen_for_new_files()
+        print("🔍 Processing ONLY NEW estimate files...")
+        process_new_estimate_files()
